@@ -90,3 +90,5 @@ local SaveStateHandler = {}; do
         end
     end
 end
+
+return SaveStateHandler
