@@ -1,0 +1,92 @@
+--[[
+  "LuizTechTV" - Creating SaveState WrieFile To Store Configs In Your Script!
+  "ChatGPT" - Explaining About WriteFile And Read file to Learn How To Create SaveState Handler So.
+  "MaxLaser" = You Know, I'm Crediting Them Cuz Reminds Me Of Them, But Its Skidder, Dont Mind Him Skidding Then.
+]]
+
+local SaveStateHandler = {}; do
+    local function SaveDataToFile(name, data)
+        local serializedData = game:GetService("HttpService"):JSONEncode(data)
+        writefile(name, serializedData)
+    end
+
+    local function LoadDataFromFile(name)
+        if isfile(name) then
+            local serializedData = readfile(name)
+            return game:GetService("HttpService"):JSONDecode(serializedData)
+        else
+            return nil
+        end
+    end
+
+    local function CreateState(name, data)
+        SaveStateHandler[name] = data
+    end
+
+    local function StateExists(name)
+        return SaveStateHandler[name] ~= nil
+    end
+
+    local function SaveState(name)
+        if StateExists(name) then
+            SaveDataToFile(name, SaveStateHandler[name])
+        end
+    end
+
+    local function LoadState(name)
+        local loadedData = LoadDataFromFile(name)
+        if loadedData then
+            SaveStateHandler[name] = loadedData
+        end
+    end
+
+    local function DeleteState(name)
+        if StateExists(name) then
+            SaveStateHandler[name] = nil
+            delfile(name)
+        end
+    end
+
+    local function RenameState(oldName, newName)
+        if StateExists(oldName) then
+            local data = SaveStateHandler[oldName]
+            SaveStateHandler[newName] = data
+            SaveStateHandler[oldName] = nil
+            renamefile(oldName, newName)
+        end
+    end
+
+    local function MergeStates(state1, state2, newName)
+        if StateExists(state1) and StateExists(state2) then
+            local data1 = SaveStateHandler[state1]
+            local data2 = SaveStateHandler[state2]
+            local mergedData = {}
+
+            for key, value in pairs(data1) do
+                mergedData[key] = value
+            end
+
+            for key, value in pairs(data2) do
+                mergedData[key] = value
+            end
+
+            CreateState(newName, mergedData)
+        end
+    end
+
+    local function IsStateModified(name)
+        if StateExists(name) then
+            local originalData = LoadDataFromFile(name)
+            local newData = SaveStateHandler[name]
+            return game:GetService("HttpService"):JSONEncode(originalData) ~= game:GetService("HttpService"):JSONEncode(newData)
+        end
+    end
+
+    local function GetStateSize(name)
+        if StateExists(name) then
+            local data = SaveStateHandler[name]
+            local serializedData = game:GetService("HttpService"):JSONEncode(data)
+            return serializedData:len()
+        end
+    end
+end
