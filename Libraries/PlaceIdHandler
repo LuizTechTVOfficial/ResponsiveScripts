@@ -1,0 +1,97 @@
+
+--[[
+  "LuizTechTV" - Creating, Very Easy And Simple
+]]
+
+local PlaceIdHandler = {}
+do
+    local callbacks = {}
+    local defaultCallback = nil
+
+    local function IsValidCallback(callback)
+        return type(callback) == "function"
+    end
+
+    local function HandlePlaceId(placeId)
+        local callback = callbacks[placeId]
+        if callback then
+            callback(placeId)
+        elseif defaultCallback then
+            defaultCallback()
+        end
+    end
+
+    function PlaceIdHandler:RegisterCallback(placeId, callback)
+        if IsValidCallback(callback) then
+            callbacks[placeId] = callback
+        end
+    end
+
+    function PlaceIdHandler:DetectPlaceId()
+        local success, placeId = pcall(function()
+            return game.PlaceId
+        end)
+
+        if success and placeId then
+            HandlePlaceId(placeId)
+        else
+            warn("Failed to detect PlaceId.")
+        end
+    end
+
+    function PlaceIdHandler:UnregisterCallback(placeId)
+        callbacks[placeId] = nil
+    end
+
+    function PlaceIdHandler:GetRegisteredPlaceIds()
+        local placeIds = {}
+        for placeId, _ in pairs(callbacks) do
+            table.insert(placeIds, placeId)
+        end
+        return placeIds
+    end
+
+    function PlaceIdHandler:ClearCallbacks()
+        for placeId in pairs(callbacks) do
+            callbacks[placeId] = nil
+        end
+    end
+
+    function PlaceIdHandler:HasCallback(placeId)
+        return callbacks[placeId] ~= nil
+    end
+
+    function PlaceIdHandler:GetCallbackCount()
+        local count = 0
+        for _, _ in pairs(callbacks) do
+            count = count + 1
+        end
+        return count
+    end
+
+    function PlaceIdHandler:GetCallbackForPlaceId(placeId)
+        return callbacks[placeId]
+    end
+
+    function PlaceIdHandler:RunAllCallbacks(...)
+        for _, callback in pairs(callbacks) do
+            if IsValidCallback(callback) then
+                callback(...)
+            end
+        end
+    end
+
+    function PlaceIdHandler:SetDefaultCallback(callback)
+        if IsValidCallback(callback) then
+            defaultCallback = callback
+        end
+    end
+
+    function PlaceIdHandler:HandleUnknownPlaceId()
+        if defaultCallback then
+            defaultCallback()
+        end
+    end
+end
+
+return PlaceIdHandler
